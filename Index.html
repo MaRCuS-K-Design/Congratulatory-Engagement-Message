@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Surprise For You 👀</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #f5c842;
+    --rose: #ff6b8a;
+    --cream: #fffdf5;
+    --deep: #1a0a2e;
+    --teal: #00d4aa;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* ── CANVAS for confetti ── */
+  #confetti-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 10;
+    display: none;
+  }
+
+  /* ── SCREEN 1: surprise button ── */
+  #screen-intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    text-align: center;
+    padding: 2rem;
+    animation: fadeIn .6s ease;
+  }
+
+  .gift-emoji {
+    font-size: 5rem;
+    animation: float 2.5s ease-in-out infinite;
+    display: block;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-14px); }
+  }
+
+  .surprise-btn {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--deep);
+    background: var(--gold);
+    border: none;
+    padding: 1rem 2.5rem;
+    border-radius: 60px;
+    cursor: pointer;
+    position: relative;
+    transition: transform .15s, box-shadow .15s;
+    box-shadow: 0 0 0 0 rgba(245,200,66,.5);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245,200,66,.5); }
+    50% { box-shadow: 0 0 0 20px rgba(245,200,66,0); }
+  }
+
+  .surprise-btn:hover { transform: scale(1.06); }
+  .surprise-btn:active { transform: scale(0.97); }
+
+  .hint {
+    font-size: 13px;
+    color: rgba(255,255,255,.3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── SCREEN 2: main message ── */
+  #screen-main {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem 1.5rem;
+    max-width: 640px;
+    animation: popIn .5s cubic-bezier(.34,1.56,.64,1);
+    position: relative;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .rings {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    animation: spin-wobble 1s ease .3s both;
+  }
+
+  @keyframes spin-wobble {
+    0% { transform: rotate(-20deg) scale(0); }
+    60% { transform: rotate(10deg) scale(1.2); }
+    100% { transform: rotate(0deg) scale(1); }
+  }
+
+  .congrats-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 5vw, 2.6rem);
+    font-weight: 900;
+    color: var(--cream);
+    line-height: 1.2;
+    margin-bottom: .75rem;
+  }
+
+  .congrats-text span { color: var(--gold); }
+
+  .sub-text {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+    color: var(--rose);
+    font-weight: 500;
+    margin-bottom: 2.5rem;
+    font-style: italic;
+  }
+
+  /* ── Move-in buttons ── */
+  .btn-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .movein-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    padding: .75rem 1.75rem;
+    border-radius: 50px;
+    border: 2px solid;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-today {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: var(--deep);
+  }
+
+  .btn-today:hover { background: #00f0c0; border-color: #00f0c0; transform: translateY(-2px); }
+
+  .btn-after {
+    background: var(--rose);
+    border-color: var(--rose);
+    color: #fff;
+  }
+
+  .btn-after:hover { background: #ff4d72; border-color: #ff4d72; transform: translateY(-2px); }
+
+  .btn-never {
+    background: transparent;
+    border-color: rgba(255,255,255,.2);
+    color: rgba(255,255,255,.3);
+    cursor: not-allowed;
+    position: relative;
+  }
+
+  .btn-never::after {
+    content: '🚫';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: 1.5rem;
+    transition: transform .2s;
+  }
+
+  .btn-never:hover::after { transform: translate(-50%, -50%) scale(1); }
+  .btn-never:hover { border-color: rgba(255,255,255,.1); }
+
+  /* ── SCREEN 3: response ── */
+  #screen-response {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem 1.5rem;
+    max-width: 600px;
+    animation: popIn .5s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  .response-emoji { font-size: 4rem; margin-bottom: 1rem; }
+
+  .response-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    font-weight: 700;
+    color: var(--cream);
+    line-height: 1.3;
+  }
+
+  .response-text span { color: var(--gold); }
+
+  /* ── "Last chance" button ── */
+  #btn-lastchance {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255,255,255,.5);
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    z-index: 100;
+    display: none;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+
+  #btn-lastchance:hover {
+    background: rgba(255,100,100,.2);
+    border-color: rgba(255,100,100,.4);
+    color: #ff8a8a;
+  }
+
+  /* ── Miami screen ── */
+  #screen-miami {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem 1.5rem;
+    max-width: 600px;
+    animation: popIn .5s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  .miami-emoji { font-size: 4rem; margin-bottom: 1rem; }
+
+  .miami-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 900;
+    line-height: 1.2;
+  }
+
+  .miami-text span { color: var(--rose); }
+  .miami-sub { font-size: 1rem; color: rgba(255,255,255,.5); margin-top: .75rem; }
+
+  /* ── Stars background ── */
+  .stars {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: #fff;
+    animation: twinkle var(--d) ease-in-out infinite;
+    opacity: 0;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0; transform: scale(1); }
+    50% { opacity: var(--o); transform: scale(1.3); }
+  }
+
+  #screen-intro, #screen-main, #screen-response, #screen-miami {
+    position: relative;
+    z-index: 5;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Go back button ── */
+  .back-btn {
+    margin-top: 2rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,.4);
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 50px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .back-btn:hover { color: rgba(255,255,255,.8); border-color: rgba(255,255,255,.4); }
+
+  /* ── Shake animation for never btn ── */
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(4px)}
+  }
+  .shake { animation: shake .4s ease; }
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- Confetti canvas -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Last chance button (hidden until screen 2) -->
+<button id="btn-lastchance" onclick="showMiami()">🚨 last chance to back out</button>
+
+<!-- Screen 1: Intro -->
+<div id="screen-intro">
+  <span class="gift-emoji">🎁</span>
+  <button class="surprise-btn" onclick="showMain()">Click for a surprise!</button>
+  <p class="hint">Go on... you know you want to</p>
+</div>
+
+<!-- Screen 2: Main message -->
+<div id="screen-main">
+  <div class="rings">💍</div>
+  <h1 class="congrats-text">Congratulations on<br><span>getting engaged!</span></h1>
+  <p class="sub-text">When do I get to move in? 👀</p>
+  <div class="btn-group">
+    <button class="movein-btn btn-today" onclick="showResponse('today')">Today</button>
+    <button class="movein-btn btn-after" onclick="showResponse('after')">After Wedding</button>
+    <button class="movein-btn btn-never" onclick="neverClick(this)">Never</button>
+  </div>
+  <button class="back-btn" onclick="goBack('screen-main','screen-intro')">← Go back</button>
+</div>
+
+<!-- Screen 3: Response -->
+<div id="screen-response">
+  <div class="response-emoji">🧳😂</div>
+  <p class="response-text" id="response-msg">Yessir I knew you loved me,<br><span>I already packed my bags.</span></p>
+  <button class="back-btn" onclick="goBack('screen-response','screen-main')">← Go back</button>
+</div>
+
+<!-- Screen 4: Miami -->
+<div id="screen-miami">
+  <div class="miami-emoji">🌴🕶️✈️</div>
+  <h2 class="miami-text"><span>Miami</span> here we come!</h2>
+  <p class="miami-sub">Cold feet? No problem. The beach awaits.</p>
+  <button class="back-btn" onclick="goBack('screen-miami','screen-main')">← Go back</button>
+</div>
+
+<script>
+  // Generate stars
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 1;
+    s.style.cssText = `
+      width:${size}px; height:${size}px;
+      top:${Math.random()*100}%;
+      left:${Math.random()*100}%;
+      --d:${(Math.random()*4+2).toFixed(1)}s;
+      --o:${(Math.random()*.7+.2).toFixed(2)};
+      animation-delay:${(Math.random()*5).toFixed(1)}s;
+    `;
+    starsEl.appendChild(s);
+  }
+
+  function hide(id){ document.getElementById(id).style.display='none'; }
+  function show(id, flex=true){ document.getElementById(id).style.display = flex ? 'flex' : 'block'; }
+
+  function showMain() {
+    hide('screen-intro');
+    show('screen-main');
+    show('btn-lastchance', false);
+    document.getElementById('btn-lastchance').style.display = 'block';
+    launchConfetti();
+  }
+
+  function showResponse(type) {
+    const msg = document.getElementById('response-msg');
+    if (type === 'after') {
+      msg.innerHTML = 'Too late,<br><span>I already packed my bags.</span>';
+    } else {
+      msg.innerHTML = 'Yessir I knew you loved me,<br><span>I already packed my bags.</span>';
+    }
+    hide('screen-main');
+    document.getElementById('btn-lastchance').style.display = 'none';
+    show('screen-response');
+    launchConfetti();
+  }
+
+  function showMiami() {
+    hide('screen-main');
+    hide('screen-response');
+    document.getElementById('btn-lastchance').style.display = 'none';
+    show('screen-miami');
+    launchConfetti(true);
+  }
+
+  function goBack(fromId, toId) {
+    hide(fromId);
+    const isIntro = toId === 'screen-intro';
+    show(toId);
+    document.getElementById('btn-lastchance').style.display = isIntro ? 'none' : 'block';
+  }
+
+  function neverClick(btn) {
+    btn.classList.remove('shake');
+    void btn.offsetWidth;
+    btn.classList.add('shake');
+  }
+
+  // ── Confetti engine ──
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let animFrame;
+
+  function launchConfetti(big = false) {
+    canvas.style.display = 'block';
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    particles = [];
+    const count = big ? 300 : 200;
+    const colors = ['#f5c842','#ff6b8a','#00d4aa','#ffffff','#ff9f43','#a29bfe','#fd79a8'];
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        w: Math.random() * 10 + 5,
+        h: Math.random() * 5 + 3,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rot: Math.random() * 360,
+        rotSpeed: (Math.random() - .5) * 6,
+        vx: (Math.random() - .5) * 4,
+        vy: Math.random() * 4 + 2,
+        opacity: 1,
+      });
+    }
+    if (animFrame) cancelAnimationFrame(animFrame);
+    drawConfetti();
+  }
+
+  function drawConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.rotSpeed;
+      if (p.y > canvas.height * .7) p.opacity -= .015;
+      if (p.opacity > 0) {
+        alive = true;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.opacity);
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot * Math.PI / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      }
+    }
+    if (alive) animFrame = requestAnimationFrame(drawConfetti);
+    else canvas.style.display = 'none';
+  }
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+</script>
+</body>
+</html>
